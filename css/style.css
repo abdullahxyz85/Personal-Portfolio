@@ -2572,3 +2572,30 @@ section:nth-child(even) {
   font-size: 16px;
   min-width: 20px;
 }
+
+/* === Force Technical Skills 4-column layout and card sizing === */
+.technical-skills {
+  grid-template-columns: repeat(4, 1fr) !important;
+  max-width: 1200px !important;
+}
+
+.skill-category {
+  max-width: 240px !important;
+  min-width: 0 !important;
+  height: 370px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: flex-start !important;
+}
+
+@media (max-width: 1200px) {
+  .technical-skills {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+}
+
+@media (max-width: 991px) {
+  .technical-skills {
+    grid-template-columns: 1fr !important;
+  }
+}
