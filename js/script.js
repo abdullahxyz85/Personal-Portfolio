@@ -1,5 +1,16 @@
 // Wait for the DOM to be fully loaded
 document.addEventListener("DOMContentLoaded", () => {
+  // Check if device is mobile
+  const isMobile =
+    window.innerWidth <= 768 ||
+    /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+      navigator.userAgent
+    );
+
+  // Add mobile class to body for CSS targeting
+  if (isMobile) {
+    document.body.classList.add("mobile-device");
+  }
   // Typed.js initialization for typing effect - if using on a different element
   if (document.querySelector(".typing-text")) {
     const typed = new Typed(".typing-text", {
@@ -19,9 +30,26 @@ document.addEventListener("DOMContentLoaded", () => {
   // Mobile menu toggle
   const menuBtn = document.querySelector(".menu-btn");
   const navbar = document.querySelector(".navbar");
+
   menuBtn.addEventListener("click", () => {
     navbar.classList.toggle("active");
     menuBtn.classList.toggle("fa-times");
+
+    // Prevent body scroll when menu is open
+    if (navbar.classList.contains("active")) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "auto";
+    }
+  });
+
+  // Close mobile menu when clicking outside
+  document.addEventListener("click", (e) => {
+    if (!navbar.contains(e.target) && !menuBtn.contains(e.target)) {
+      navbar.classList.remove("active");
+      menuBtn.classList.remove("fa-times");
+      document.body.style.overflow = "auto";
+    }
   });
 
   // Close mobile menu when clicking on a nav link
@@ -29,6 +57,7 @@ document.addEventListener("DOMContentLoaded", () => {
     link.addEventListener("click", () => {
       navbar.classList.remove("active");
       menuBtn.classList.remove("fa-times");
+      document.body.style.overflow = "auto";
     });
   });
 
@@ -186,5 +215,154 @@ document.addEventListener("DOMContentLoaded", () => {
   const educationItems = document.querySelectorAll(".education-item");
   educationItems.forEach((item, index) => {
     item.style.animationDelay = `${index * 0.1}s`;
+  });
+
+  // Mobile-specific optimizations
+  function isMobileDevice() {
+    return (
+      window.innerWidth <= 768 ||
+      /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+        navigator.userAgent
+      )
+    );
+  }
+
+  // Optimize animations for mobile
+  if (isMobileDevice()) {
+    // Reduce animation complexity on mobile
+    document.documentElement.style.setProperty("--animation-duration", "0.3s");
+
+    // Add touch feedback
+    document
+      .querySelectorAll(
+        ".btn, .project-link, .social-links a, .achievement-card, .skill-category"
+      )
+      .forEach((element) => {
+        element.addEventListener("touchstart", function () {
+          this.style.transform = "scale(0.98)";
+        });
+
+        element.addEventListener("touchend", function () {
+          this.style.transform = "";
+        });
+      });
+  }
+
+  // Handle orientation change
+  window.addEventListener("orientationchange", function () {
+    setTimeout(() => {
+      // Recalculate positions after orientation change
+      window.scrollTo(0, window.scrollY);
+    }, 100);
+  });
+
+  // Lazy loading for images (mobile optimization)
+  if ("IntersectionObserver" in window) {
+    const imageObserver = new IntersectionObserver((entries, observer) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          const img = entry.target;
+          if (img.dataset.src) {
+            img.src = img.dataset.src;
+            img.classList.remove("lazy");
+            observer.unobserve(img);
+          }
+        }
+      });
+    });
+
+    document.querySelectorAll("img[data-src]").forEach((img) => {
+      imageObserver.observe(img);
+    });
+  }
+
+  // Smooth scroll improvements for mobile
+  function smoothScrollTo(target) {
+    const targetElement = document.querySelector(target);
+    if (targetElement) {
+      const headerHeight = document.querySelector(".header").offsetHeight;
+      const targetPosition = targetElement.offsetTop - headerHeight - 20;
+
+      window.scrollTo({
+        top: targetPosition,
+        behavior: "smooth",
+      });
+    }
+  }
+
+  // Update smooth scrolling for mobile
+  document.querySelectorAll('a[href^="#"]').forEach((anchor) => {
+    anchor.addEventListener("click", function (e) {
+      e.preventDefault();
+      const target = this.getAttribute("href");
+      smoothScrollTo(target);
+    });
+  });
+
+  // Performance optimization: throttle scroll events on mobile
+  let scrollTimeout;
+  const throttledScroll = () => {
+    if (scrollTimeout) return;
+
+    scrollTimeout = setTimeout(
+      () => {
+        // Your scroll logic here
+        animateOnScroll();
+        scrollTimeout = null;
+      },
+      isMobileDevice() ? 100 : 50
+    );
+  };
+
+  window.addEventListener("scroll", throttledScroll);
+
+  // Touch swipe detection for theme switcher (mobile enhancement)
+  let touchStartX = 0;
+  let touchStartY = 0;
+
+  document.addEventListener(
+    "touchstart",
+    (e) => {
+      touchStartX = e.changedTouches[0].screenX;
+      touchStartY = e.changedTouches[0].screenY;
+    },
+    false
+  );
+
+  document.addEventListener(
+    "touchend",
+    (e) => {
+      const touchEndX = e.changedTouches[0].screenX;
+      const touchEndY = e.changedTouches[0].screenY;
+
+      // Detect horizontal swipe
+      const deltaX = touchEndX - touchStartX;
+      const deltaY = touchEndY - touchStartY;
+
+      // Swipe right to open theme panel (if within header area)
+      if (
+        Math.abs(deltaX) > Math.abs(deltaY) &&
+        deltaX > 50 &&
+        touchStartY < 100
+      ) {
+        const themeOptions = document.querySelector(".theme-options");
+        if (themeOptions && !themeOptions.classList.contains("show")) {
+          themeOptions.classList.add("show");
+        }
+      }
+    },
+    false
+  );
+
+  // Enhanced viewport height handling for mobile browsers
+  function setViewportHeight() {
+    const vh = window.innerHeight * 0.01;
+    document.documentElement.style.setProperty("--vh", `${vh}px`);
+  }
+
+  setViewportHeight();
+  window.addEventListener("resize", setViewportHeight);
+  window.addEventListener("orientationchange", () => {
+    setTimeout(setViewportHeight, 100);
   });
 });
